@@ -9,6 +9,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
+    <head>
+      <meta charSet="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="description" content="Tienduca - Tu tienda de emprendedores" />
+      <link rel="icon" href="/12.png" />
+      <title>Tienduca</title>
+    </head>
       <body>{children}</body>
     </html>
   );
