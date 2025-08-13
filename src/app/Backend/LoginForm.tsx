@@ -1,12 +1,23 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/index"); // Redirigir al perfil si ya está logueado
+    }
+  }, [user, loading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,11 +25,19 @@ export default function LoginForm() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Inicio de sesión exitoso");
+      // No alert, porque el useEffect redirigirá automáticamente
     } catch (err) {
       setError("Correo o contraseña incorrectos");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <p>Cargando...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
