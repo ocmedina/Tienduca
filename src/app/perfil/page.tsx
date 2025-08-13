@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "@/firebase/firebaseConfig";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, User, onAuthStateChanged, signOut } from "firebase/auth";
+
+const auth = getAuth();
 import { useRouter } from "next/navigation";
 
 export default function PerfilPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {

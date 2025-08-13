@@ -21,7 +21,7 @@ export default function RegisterForm() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
       router.push("/perfil");
-    } catch (err: any) {
+    } catch (err: unknown ) {
       setError("Error al registrarse. Intenta nuevamente.");
     } finally {
       setLoading(false);
