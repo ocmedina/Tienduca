@@ -13,8 +13,8 @@ type Props = {
 const emprendedores = [
   {
     id: 1,
-    nombre: "Xime Natural",
-    descripcion: "Cosmética natural y ecológica.",
+    nombre: "Paola Lenceria",
+    descripcion: "Ropa Interior y Lenceria.",
     imagen: "/emprendedores/xime.jpg",
     whatsapp: "https://wa.me/5492611234567",
     categoriaId: "productos-naturales",
