@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { db } from "@/firebase/firebaseConfig";
 import { collectionGroup, getDocs, query, orderBy } from "firebase/firestore";
 
@@ -57,17 +58,21 @@ export default function Emprendedores() {
             className="bg-white rounded-3xl shadow-md hover:shadow-2xl hover:scale-105 transition transform duration-300 overflow-hidden border border-gray-200 flex flex-col"
           >
             {/* Imagen */}
-            {emp.imagen ? (
-              <img
-                src={emp.imagen}
-                alt={emp.nombre}
-                className="h-40 w-full object-cover"
-              />
-            ) : (
-              <div className="h-40 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
-                Sin imagen
-              </div>
-            )}
+            <div className="relative h-40 w-full">
+              {emp.imagen ? (
+                <Image
+                  src={emp.imagen}
+                  alt={emp.nombre}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              ) : (
+                <div className="h-40 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+                  Sin imagen
+                </div>
+              )}
+            </div>
 
             {/* Contenido */}
             <div className="p-5 flex flex-col flex-1">

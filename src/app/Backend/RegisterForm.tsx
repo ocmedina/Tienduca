@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  updateProfile,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -31,11 +29,7 @@ export default function RegisterForm() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, { displayName: name });
 
       setSuccess("Cuenta creada con éxito, redirigiendo...");
@@ -66,13 +60,14 @@ export default function RegisterForm() {
     >
       {/* Logo + instrucciones */}
       <div className="text-center mb-6">
-        <img
-          src="/12.png"
-          alt="Logo"
-          width={100}
-          height={100}
-          className="mx-auto drop-shadow-lg"
-        />
+        <div className="relative w-24 h-24 mx-auto">
+          <Image
+            src="/12.png"
+            alt="Logo"
+            fill
+            className="object-contain drop-shadow-lg"
+          />
+        </div>
         <p className="text-gray-600 mt-4 leading-relaxed">
           Bienvenido, completa el formulario para crear tu cuenta y acceder a
           todas las funcionalidades de la plataforma. <br />
@@ -89,7 +84,6 @@ export default function RegisterForm() {
           {error}
         </p>
       )}
-
       {success && (
         <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-center font-medium">
           {success}
@@ -97,9 +91,7 @@ export default function RegisterForm() {
       )}
 
       <label className="block mb-4">
-        <span className="text-gray-700 font-medium mb-1 block">
-          Nombre completo
-        </span>
+        <span className="text-gray-700 font-medium mb-1 block">Nombre completo</span>
         <input
           type="text"
           placeholder="Tu nombre completo"
@@ -112,9 +104,7 @@ export default function RegisterForm() {
       </label>
 
       <label className="block mb-4">
-        <span className="text-gray-700 font-medium mb-1 block">
-          Correo electrónico
-        </span>
+        <span className="text-gray-700 font-medium mb-1 block">Correo electrónico</span>
         <input
           type="email"
           placeholder="ejemplo@correo.com"
@@ -127,9 +117,7 @@ export default function RegisterForm() {
       </label>
 
       <label className="block mb-4">
-        <span className="text-gray-700 font-medium mb-1 block">
-          Contraseña
-        </span>
+        <span className="text-gray-700 font-medium mb-1 block">Contraseña</span>
         <input
           type="password"
           placeholder="********"
@@ -142,9 +130,7 @@ export default function RegisterForm() {
       </label>
 
       <label className="block mb-6">
-        <span className="text-gray-700 font-medium mb-1 block">
-          Confirmar contraseña
-        </span>
+        <span className="text-gray-700 font-medium mb-1 block">Confirmar contraseña</span>
         <input
           type="password"
           placeholder="********"
