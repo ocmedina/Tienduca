@@ -57,13 +57,13 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleRegister} className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-8 mt-10">
-      {/* Logo + instrucciones */}
       <div className="text-center mb-6">
         <Image
           src="/12.png"
-          alt="Logo"
+          alt="Logo de Tienduca"
           width={100}
           height={100}
+          priority
           className="mx-auto drop-shadow-lg"
         />
         <p className="text-gray-600 mt-4 leading-relaxed">
@@ -75,13 +75,8 @@ export default function RegisterForm() {
 
       <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Crear Cuenta</h2>
 
-      {error && (
-        <p className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center font-medium">{error}</p>
-      )}
-
-      {success && (
-        <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-center font-medium">{success}</p>
-      )}
+      {error && <p className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center font-medium">{error}</p>}
+      {success && <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-center font-medium">{success}</p>}
 
       <label className="block mb-4">
         <span className="text-gray-700 font-medium mb-1 block">Nombre completo</span>
@@ -150,19 +145,8 @@ export default function RegisterForm() {
               fill="none"
               viewBox="0 0 24 24"
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              ></path>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
             Registrando...
           </span>
