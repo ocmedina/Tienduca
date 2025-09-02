@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { FirebaseError } from "firebase/app";
 
 export default function RegisterForm() {
   const [email, setEmail] = useState("");
@@ -34,8 +35,9 @@ export default function RegisterForm() {
 
       setSuccess("Cuenta creada con éxito, redirigiendo...");
       setTimeout(() => router.push("/perfil"), 2000);
-    } catch (err: any) {
-      switch (err.code) {
+    } catch (err: unknown) {
+      const error = err as FirebaseError;
+      switch (error.code) {
         case "auth/email-already-in-use":
           setError("Este correo ya está en uso. Prueba con otro.");
           break;
@@ -54,40 +56,31 @@ export default function RegisterForm() {
   };
 
   return (
-    <form
-      onSubmit={handleRegister}
-      className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-8 mt-10"
-    >
+    <form onSubmit={handleRegister} className="max-w-md mx-auto bg-white shadow-lg rounded-lg p-8 mt-10">
       {/* Logo + instrucciones */}
       <div className="text-center mb-6">
-        <div className="relative w-24 h-24 mx-auto">
-          <Image
-            src="/12.png"
-            alt="Logo"
-            fill
-            className="object-contain drop-shadow-lg"
-          />
-        </div>
+        <Image
+          src="/12.png"
+          alt="Logo"
+          width={100}
+          height={100}
+          className="mx-auto drop-shadow-lg"
+        />
         <p className="text-gray-600 mt-4 leading-relaxed">
-          Bienvenido, completa el formulario para crear tu cuenta y acceder a
-          todas las funcionalidades de la plataforma. <br />
+          Bienvenido, completa el formulario para crear tu cuenta y acceder a todas las funcionalidades de la plataforma.
+          <br />
           ¡Es rápido y fácil!
         </p>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
-        Crear Cuenta
-      </h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Crear Cuenta</h2>
 
       {error && (
-        <p className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center font-medium">
-          {error}
-        </p>
+        <p className="bg-red-100 text-red-700 p-3 rounded mb-4 text-center font-medium">{error}</p>
       )}
+
       {success && (
-        <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-center font-medium">
-          {success}
-        </p>
+        <p className="bg-green-100 text-green-700 p-3 rounded mb-4 text-center font-medium">{success}</p>
       )}
 
       <label className="block mb-4">

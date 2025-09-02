@@ -46,8 +46,8 @@ export default function Emprendedores() {
     <section className="py-12 bg-gray-50">
       {/* Título general */}
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold text-gray-900">Emprendimientos Destacados</h2>
-        <p className="text-gray-600 mt-2">Conoce los emprendimientos de nuestra comunidad</p>
+        <h2 className="text-3xl font-bold text-gray-900">Nuestros emprendedores</h2>
+        <p className="text-gray-600 mt-2">Personas reales, ideas auténticas. Conocé los productos y servicios de quienes hacen crecer nuestra comunidad.</p>
       </div>
 
       {/* Grid de tarjetas */}
