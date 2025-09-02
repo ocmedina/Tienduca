@@ -10,7 +10,6 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
 
 export default function Header() {
-  // Hooks llamados siempre en el mismo orden
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
@@ -19,16 +18,10 @@ export default function Header() {
   const profileMenuRefDesktop = useRef<HTMLDivElement>(null);
   const profileMenuRefMobile = useRef<HTMLDivElement>(null);
 
-  // Sólo después de llamar todos los hooks, hacemos chequeo condicional para loading
-  if (loading) {
-    
-  }
-
   const profileInitial = user?.displayName
     ? user.displayName.charAt(0).toUpperCase()
     : "U";
 
-  // Cerrar submenu si clickeas fuera (desktop o mobile)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -52,6 +45,11 @@ export default function Header() {
     setProfileMenuOpen(false);
     router.push("/");
   };
+
+  // 👇 Este return se hace DESPUÉS de los hooks
+  if (loading) {
+    return null;
+  }
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200">
@@ -99,6 +97,12 @@ export default function Header() {
 
               {profileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+                  <Link
+                    href="/perfil"
+                    className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
+                  >
+                    Mi perfil
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 hover:bg-red-600 hover:text-white rounded-md transition"
@@ -166,6 +170,13 @@ export default function Header() {
                 </button>
                 {profileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+                    <Link
+                      href="/perfil"
+                      onClick={() => setMenuOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
+                    >
+                      Mi perfil
+                    </Link>
                     <button
                       onClick={() => {
                         handleLogout();

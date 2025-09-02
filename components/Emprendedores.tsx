@@ -1,100 +1,90 @@
 "use client";
+import { useEffect, useState } from "react";
+import { db } from "@/firebase/firebaseConfig";
+import { collectionGroup, getDocs, query, orderBy } from "firebase/firestore";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-
-type Props = {
-  categoriaSeleccionada: string | null;
+type Emprendimiento = {
+  id: string;
+  nombre: string;
+  categoria: string;
+  descripcion: string;
+  contacto: string;
+  imagen?: string;
 };
 
-const emprendedores = [
-  {
-    id: 1,
-    nombre: "Paola Lenceria",
-    descripcion: "Ropa Interior y Lenceria.",
-    imagen: "/emprendedores/xime.jpg",
-    whatsapp: "https://wa.me/5492611234567",
-    categoriaId: "productos-naturales",
-  },
-  {
-    id: 2,
-    nombre: "Don Hugo Artesanías",
-    descripcion: "Artesanías en madera hechas a mano.",
-    imagen: "/emprendedores/donhugo.jpg",
-    whatsapp: "https://wa.me/5492617654321",
-    categoriaId: "artesanias",
-  },
-  {
-    id: 3,
-    nombre: "Pastelería Dulce Flor",
-    descripcion: "Tortas, cupcakes y más.",
-    imagen: "/emprendedores/pasteleria.jpg",
-    whatsapp: "https://wa.me/5492619999999",
-    categoriaId: "pasteleria",
-  },
-];
+export default function Emprendedores() {
+  const [emprendimientos, setEmprendimientos] = useState<Emprendimiento[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const Emprendedores = ({ categoriaSeleccionada }: Props) => {
-  const filtrados = categoriaSeleccionada
-    ? emprendedores.filter((e) => e.categoriaId === categoriaSeleccionada)
-    : emprendedores;
+  useEffect(() => {
+    const fetchEmprendimientos = async () => {
+      try {
+        const q = query(
+          collectionGroup(db, "emprendimientos"),
+          orderBy("createdAt", "desc")
+        );
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() } as Emprendimiento)
+        );
+        setEmprendimientos(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmprendimientos();
+  }, []);
+
+  if (loading) {
+    return <p className="text-center mt-10 text-gray-500 animate-pulse">Cargando emprendedores...</p>;
+  }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-12 bg-gray-50">
+      {/* Título general */}
       <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold">Nuestros emprendedores</h2>
-        <p className="text-gray-600 mt-2">
-          {categoriaSeleccionada
-            ? "Emprendedores en esta categoría:"
-            : "Personas reales, ideas auténticas. Conocé los productos y servicios de quienes hacen crecer nuestra comunidad."}
-        </p>
+        <h2 className="text-3xl font-bold text-gray-900">Emprendimientos Destacados</h2>
+        <p className="text-gray-600 mt-2">Conoce los emprendimientos de nuestra comunidad</p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4">
-        {filtrados.length > 0 ? (
-          <Swiper
-            modules={[Navigation, Pagination]}
-            spaceBetween={20}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            breakpoints={{
-              640: { slidesPerView: 1 },
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
+      {/* Grid de tarjetas */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+        {emprendimientos.map((emp) => (
+          <div
+            key={emp.id}
+            className="bg-white rounded-3xl shadow-md hover:shadow-2xl hover:scale-105 transition transform duration-300 overflow-hidden border border-gray-200 flex flex-col"
           >
-            {filtrados.map((e) => (
-              <SwiperSlide key={e.id}>
-                <div className="bg-white rounded-xl shadow-md p-6 h-full flex flex-col items-center text-center">
-                  <img
-                    src={e.imagen}
-                    alt={e.nombre}
-                    className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-green-500"
-                  />
-                  <h3 className="text-lg font-bold">{e.nombre}</h3>
-                  <p className="text-gray-500 text-sm mt-1 mb-3">{e.descripcion}</p>
-                  <a
-                    href={e.whatsapp}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-auto bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                  >
-                    Contactar por WhatsApp
-                  </a>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        ) : (
-          <p className="text-center text-gray-500">No hay emprendedores en esta categoría todavía.</p>
-        )}
+            {/* Imagen */}
+            {emp.imagen ? (
+              <img
+                src={emp.imagen}
+                alt={emp.nombre}
+                className="h-40 w-full object-cover"
+              />
+            ) : (
+              <div className="h-40 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+                Sin imagen
+              </div>
+            )}
+
+            {/* Contenido */}
+            <div className="p-5 flex flex-col flex-1">
+              <h3 className="font-bold text-lg text-gray-800">{emp.nombre}</h3>
+              <span className="text-indigo-600 text-sm font-medium mt-1">{emp.categoria}</span>
+              <p className="mt-3 text-gray-600 text-sm flex-1">{emp.descripcion}</p>
+              
+              <div className="mt-4 flex items-center justify-between">
+                <span className="text-gray-500 text-sm">📞 {emp.contacto}</span>
+                <button className="px-3 py-1 bg-indigo-500 text-white rounded-xl text-sm shadow hover:bg-indigo-600 transition">
+                  Ver más
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
-};
-
-export default Emprendedores;
+}
