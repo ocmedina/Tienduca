@@ -4,8 +4,13 @@ import { motion } from "framer-motion";
 
 export default function Hero() {
   return (
-    <section className="pt-26 pb-20 bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center">
+    <section className="relative pt-26 pb-20 bg-center bg-cover bg-no-repeat text-white"
+      style={{ backgroundImage: "url('/13.jpg')" }}
+    >
+      {/* Superposición oscura para mejorar la legibilidad del texto */}
+      <div className="absolute inset-0 bg-blue-900 opacity-60"></div>
+      
+      <div className="relative max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center z-10">
         {/* Texto */}
         <motion.div
           className="md:w-1/2 text-center md:text-left"
@@ -47,12 +52,6 @@ export default function Hero() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
         >
-          <img
-            src="/hero-emprendedores.png"
-            alt="Emprendedores locales"
-            className="w-full max-w-md rounded-lg shadow-lg"
-            loading="lazy"
-          />
         </motion.div>
       </div>
     </section>
