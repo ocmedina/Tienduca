@@ -1,18 +1,24 @@
 "use client";
 import { useState } from "react";
 import { db } from "@/firebase/firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { User } from "firebase/auth";
 
 type Props = {
   user: User;
+  onSuccess?: () => void; // callback para recargar la sección
 };
 
-export default function NuevoEmprendimiento({ user }: Props) {
+export default function NuevoEmprendimiento({ user, onSuccess }: Props) {
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [contacto, setContacto] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [tiktok, setTiktok] = useState("");
+  const [web, setWeb] = useState("");
+  const [imagen, setImagen] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,20 +26,24 @@ export default function NuevoEmprendimiento({ user }: Props) {
     setLoading(true);
 
     try {
-      // Guardar el emprendimiento dentro del usuario
       await addDoc(collection(db, "users", user.uid, "emprendimientos"), {
         nombre,
         categoria,
         descripcion,
         contacto,
-        createdAt: new Date(),
+        instagram,
+        facebook,
+        tiktok,
+        web,
+        imagen,
+        createdAt: serverTimestamp(),
       });
 
       alert("Emprendimiento creado con éxito 🚀");
-      setNombre("");
-      setCategoria("");
-      setDescripcion("");
-      setContacto("");
+      setNombre(""); setCategoria(""); setDescripcion(""); setContacto("");
+      setInstagram(""); setFacebook(""); setTiktok(""); setWeb(""); setImagen("");
+
+      if (onSuccess) onSuccess(); // llamar al callback para recargar Emprendedores
     } catch (err) {
       console.error(err);
       alert("Error al crear emprendimiento");
@@ -43,13 +53,18 @@ export default function NuevoEmprendimiento({ user }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto bg-white p-6 rounded shadow-lg mt-10">
-      <h2 className="text-xl font-semibold mb-4 text-center">Nuevo Emprendimiento</h2>
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto bg-white p-6 rounded shadow-lg mt-10 space-y-3">
+      <h2 className="text-xl font-semibold text-center">Nuevo Emprendimiento</h2>
 
-      <input type="text" placeholder="Nombre" value={nombre} onChange={(e)=>setNombre(e.target.value)} className="w-full border px-4 py-2 rounded mb-3" required />
-      <input type="text" placeholder="Categoría" value={categoria} onChange={(e)=>setCategoria(e.target.value)} className="w-full border px-4 py-2 rounded mb-3" required />
-      <textarea placeholder="Descripción" value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} className="w-full border px-4 py-2 rounded mb-3" required />
-      <input type="text" placeholder="Contacto" value={contacto} onChange={(e)=>setContacto(e.target.value)} className="w-full border px-4 py-2 rounded mb-3" required />
+      <input type="text" placeholder="Nombre" value={nombre} onChange={(e)=>setNombre(e.target.value)} className="w-full border px-4 py-2 rounded" required />
+      <input type="text" placeholder="Categoría" value={categoria} onChange={(e)=>setCategoria(e.target.value)} className="w-full border px-4 py-2 rounded" required />
+      <textarea placeholder="Descripción" value={descripcion} onChange={(e)=>setDescripcion(e.target.value)} className="w-full border px-4 py-2 rounded" required />
+      <input type="text" placeholder="Contacto (WhatsApp)" value={contacto} onChange={(e)=>setContacto(e.target.value)} className="w-full border px-4 py-2 rounded" required />
+      <input type="text" placeholder="Instagram" value={instagram} onChange={(e)=>setInstagram(e.target.value)} className="w-full border px-4 py-2 rounded" />
+      <input type="text" placeholder="Facebook" value={facebook} onChange={(e)=>setFacebook(e.target.value)} className="w-full border px-4 py-2 rounded" />
+      <input type="text" placeholder="TikTok" value={tiktok} onChange={(e)=>setTiktok(e.target.value)} className="w-full border px-4 py-2 rounded" />
+      <input type="text" placeholder="Página web" value={web} onChange={(e)=>setWeb(e.target.value)} className="w-full border px-4 py-2 rounded" />
+      <input type="text" placeholder="URL de imagen" value={imagen} onChange={(e)=>setImagen(e.target.value)} className="w-full border px-4 py-2 rounded" />
 
       <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
         {loading ? "Guardando..." : "Crear"}
