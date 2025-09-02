@@ -18,7 +18,7 @@ export default function Home() {
       <Header />
       <Hero />
       <Categorias onCategoriaClick={(id) => setCategoriaSeleccionada(id)} />
-      <Emprendedores categoriaSeleccionada={categoriaSeleccionada} />
+      <Emprendedores  />
       <Sumate />
       <Sobre />
       <Footer />
