@@ -126,7 +126,7 @@ export default function EmprendedoresFiltrados() {
   }
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section id="emprendedores" className="py-12 bg-gray-50">
       {/* Carrusel de categorías */}
       <div className="text-center mb-10 px-4">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Nuestros Emprendedores</h2>

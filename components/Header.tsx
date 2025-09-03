@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/firebase/firebaseConfig";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,10 +47,7 @@ export default function Header() {
     router.push("/");
   };
 
-  // 👇 Este return se hace DESPUÉS de los hooks
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200">
@@ -63,7 +61,6 @@ export default function Header() {
         <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-700">
           <a href="#" className="hover:text-blue-600 transition">Inicio</a>
           <a href="#emprendedores" className="hover:text-blue-600 transition">Emprendedores</a>
-          <a href="#categorias" className="hover:text-blue-600 transition">Categorías</a>
           <a href="#sumate" className="hover:text-blue-600 transition">Sumate</a>
         </nav>
 
@@ -95,36 +92,85 @@ export default function Header() {
                 {profileInitial}
               </button>
 
-              {profileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50">
-                  <Link
-                    href="/perfil"
-                    className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
+              <AnimatePresence>
+                {profileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50"
                   >
-                    Mi perfil
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 hover:bg-red-600 hover:text-white rounded-md transition"
+                    <Link
+                      href="/perfil"
+                      className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
+                    >
+                      Mi perfil
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 hover:bg-red-600 hover:text-white rounded-md transition"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile: botón hamburguesa + perfil */}
+        <div className="flex items-center gap-3 sm:hidden">
+          {user && (
+            <div className="relative" ref={profileMenuRefMobile}>
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500"
+                aria-label="Abrir menú de perfil"
+              >
+                {profileInitial}
+              </button>
+
+              <AnimatePresence>
+                {profileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50"
                   >
-                    Cerrar sesión
-                  </button>
-                </div>
-              )}
+                    <Link
+                      href="/perfil"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
+                    >
+                      Mi perfil
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setProfileMenuOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 hover:bg-red-600 hover:text-white rounded-md transition"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
 
-          
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+          </button>
         </div>
-
-        {/* Botón hamburguesa mobile */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="sm:hidden p-2 rounded-md text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
       </div>
 
       {/* Menú desplegable mobile */}
@@ -136,7 +182,7 @@ export default function Header() {
             <a href="#categorias" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Categorías</a>
             <a href="#sumate" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Sumate</a>
 
-            {!user ? (
+            {!user && (
               <>
                 <Link
                   href="/login"
@@ -154,36 +200,6 @@ export default function Header() {
                   Registrarse
                 </Link>
               </>
-            ) : (
-              <div className="relative" ref={profileMenuRefMobile}>
-                <button
-                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-green-500"
-                  aria-label="Abrir menú de perfil"
-                >
-                  {profileInitial}
-                </button>
-                {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-md shadow-lg z-50">
-                    <Link
-                      href="/perfil"
-                      onClick={() => setMenuOpen(false)}
-                      className="block px-4 py-2 hover:bg-gray-100 transition rounded-md"
-                    >
-                      Mi perfil
-                    </Link>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setMenuOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 hover:bg-red-600 hover:text-white rounded-md transition"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
-                )}
-              </div>
             )}
           </div>
         </nav>
