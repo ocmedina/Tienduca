@@ -38,7 +38,7 @@ type Emprendimiento = {
   facebook?: string;
   tiktok?: string;
   web?: string;
-  imagen?: string;
+  imageUrl?: string; // CAMBIO IMPORTANTE: Ahora se usa 'imageUrl' en lugar de 'imagen'
 };
 
 const categorias = [
@@ -163,8 +163,8 @@ export default function EmprendedoresFiltrados() {
               className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 overflow-hidden flex flex-col"
             >
               <div className="relative h-48 w-full">
-                {emp.imagen ? (
-                  <Image src={emp.imagen} alt={emp.nombre} fill className="object-cover" />
+                {emp.imageUrl ? ( // CAMBIO IMPORTANTE: Se usa 'imageUrl' en la condición
+                  <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
                 ) : (
                   <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
                     Sin imagen

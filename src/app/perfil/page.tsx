@@ -15,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
-import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe } from "react-icons/fa";
+import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe, FaImage, FaTimesCircle } from "react-icons/fa"; // Se añadió FaImage y FaTimesCircle
 
 type Emprendimiento = {
   id: string;
@@ -27,6 +27,7 @@ type Emprendimiento = {
   facebook?: string;
   tiktok?: string;
   web?: string;
+  imageUrl?: string; // Nuevo campo para la URL de la imagen
 };
 
 const categorias = [
@@ -59,7 +60,13 @@ export default function Perfil() {
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [web, setWeb] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null); // Estado para el archivo de imagen seleccionado
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // Estado para la previsualización de la imagen
   const [subiendo, setSubiendo] = useState(false);
+
+  // Configuración de Cloudinary (¡Reemplaza con tus datos!)
+  const CLOUDINARY_CLOUD_NAME = "dkqqhbble"; // Reemplaza esto con tu Cloud Name
+  const CLOUDINARY_UPLOAD_PRESET = "ocmedina"; // Reemplaza esto con el nombre de tu upload preset (sin firmar)
 
   // Función para formatear WhatsApp
   const formatWhatsApp = (numero: string) => {
@@ -98,6 +105,33 @@ export default function Perfil() {
     fetchEmprendimientos();
   }, [user, refresh]);
 
+  // Función para subir la imagen a Cloudinary
+  const uploadImageToCloudinary = async (file: File): Promise<string | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const data = await response.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      } else {
+        console.error("Error al subir imagen a Cloudinary:", data);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error en la solicitud a Cloudinary:", error);
+      return null;
+    }
+  };
+
   // Subir nuevo emprendimiento o actualizar existente
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,6 +145,23 @@ export default function Perfil() {
     }
     setSubiendo(true);
 
+    let finalImageUrl = editingEmp?.imageUrl || null; // Mantener la imagen existente por defecto
+
+    if (imageFile) {
+      // Si hay un nuevo archivo de imagen, subirlo
+      const uploadedUrl = await uploadImageToCloudinary(imageFile);
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+      } else {
+        alert("Error al subir la imagen. Intenta de nuevo.");
+        setSubiendo(false);
+        return;
+      }
+    } else if (imageUrlPreview === null && editingEmp?.imageUrl) {
+        // Si se eliminó la previsualización de una imagen existente
+        finalImageUrl = null;
+    }
+
     try {
       if (editingEmp) {
         // Modo Edición
@@ -123,6 +174,7 @@ export default function Perfil() {
           facebook,
           tiktok,
           web,
+          imageUrl: finalImageUrl,
         });
       } else {
         // Modo Creación
@@ -135,12 +187,13 @@ export default function Perfil() {
           facebook,
           tiktok,
           web,
+          imageUrl: finalImageUrl,
           createdAt: serverTimestamp(),
         });
       }
 
-      handleCancelEdit();
-      setRefresh(!refresh);
+      handleCancelEdit(); // Limpia el formulario y el estado de edición
+      setRefresh(!refresh); // Fuerza la recarga de la lista
     } catch (err) {
       console.error(err);
       alert("Error al guardar el emprendimiento.");
@@ -148,6 +201,29 @@ export default function Perfil() {
       setSubiendo(false);
     }
   };
+
+  // Manejar el cambio de archivo de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      setImageUrlPreview(URL.createObjectURL(file)); // Crear una URL para previsualizar
+    } else {
+      setImageFile(null);
+      setImageUrlPreview(null);
+    }
+  };
+
+  // Eliminar la imagen previsualizada o la imagen existente en edición
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImageUrlPreview(null);
+    // Si estamos editando y eliminamos la imagen, también la quitamos del editingEmp
+    if (editingEmp) {
+      setEditingEmp({ ...editingEmp, imageUrl: undefined });
+    }
+  };
+
 
   // Llenar el formulario para editar
   const handleEdit = (emp: Emprendimiento) => {
@@ -160,6 +236,8 @@ export default function Perfil() {
     setFacebook(emp.facebook || "");
     setTiktok(emp.tiktok || "");
     setWeb(emp.web || "");
+    setImageFile(null); // Resetear el archivo seleccionado al editar
+    setImageUrlPreview(emp.imageUrl || null); // Mostrar la imagen existente si hay
   };
 
   // Cancelar la edición
@@ -173,6 +251,8 @@ export default function Perfil() {
     setFacebook("");
     setTiktok("");
     setWeb("");
+    setImageFile(null);
+    setImageUrlPreview(null);
   };
 
   // Eliminar emprendimiento
@@ -195,15 +275,30 @@ export default function Perfil() {
     <div className="bg-gray-100 min-h-screen py-10">
       <div className="max-w-3xl mx-auto p-4 space-y-8 relative">
 
-        {/* Botón para volver a la página principal con nuevo diseño */}
-        <button
-          onClick={() => router.push('/')}
-          className="absolute top-4 left-4 bg-white text-blue-900 border border-blue-200 px-4 py-2 rounded-full shadow-md hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
-        >
-          &laquo; Volver
-        </button>
+        {/* Botón para volver a la página principal */}
+{/* Botón para volver a la página principal */}
+<button
+  onClick={() => router.push('/')}
+  className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-gray-800 bg-yellow-400 shadow-md hover:bg-yellow-500 transition-colors duration-200"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-4 w-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 19l-7-7 7-7"
+    />
+  </svg>
+  Volver
+</button>
 
-    
+      
 
         {/* Sección Perfil */}
         <div className="bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-8 rounded-3xl shadow-xl text-center">
@@ -263,6 +358,40 @@ export default function Perfil() {
               className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-700 transition-all duration-200"
               required
             />
+
+            {/* Campo de subida de imagen */}
+            <label className="block text-gray-700 text-sm font-bold mb-2">Imagen del Emprendimiento (opcional)</label>
+            <div className="flex items-center space-x-4">
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100"
+                />
+                {(imageUrlPreview || (editingEmp && editingEmp.imageUrl)) && (
+                    <div className="relative w-24 h-24">
+                        <img
+                            src={imageUrlPreview || editingEmp?.imageUrl}
+                            alt="Previsualización"
+                            className="w-full h-full object-cover rounded-md border border-gray-300"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                            aria-label="Eliminar imagen"
+                        >
+                            <FaTimesCircle className="text-lg" />
+                        </button>
+                    </div>
+                )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <input
                 type="text"
@@ -332,6 +461,13 @@ export default function Perfil() {
                   <div className="flex-1">
                     <h4 className="font-bold text-xl text-blue-800">{emp.nombre}</h4>
                     <p className="text-yellow-600 font-medium text-sm mt-1">{emp.categoria}</p>
+                    {emp.imageUrl && ( // Mostrar imagen si existe
+                        <img
+                            src={emp.imageUrl}
+                            alt={`Imagen de ${emp.nombre}`}
+                            className="w-32 h-32 object-cover rounded-md mt-3 mb-4 shadow-sm"
+                        />
+                    )}
                     <p className="text-gray-600 mt-2 text-sm leading-relaxed">{emp.descripcion}</p>
                     <div className="flex gap-4 mt-4 text-gray-500 flex-wrap">
                       {emp.contacto && (
