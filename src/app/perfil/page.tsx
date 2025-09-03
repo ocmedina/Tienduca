@@ -36,6 +36,7 @@ const categorias = [
   "Comida casera",
   "Pastelería",
   "Bebidas",
+  "Carnicerías",
   "Artesanías",
   "Hogar y decoración",
   "Moda y accesorios",

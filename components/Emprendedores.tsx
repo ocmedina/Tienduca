@@ -32,7 +32,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { FaScissors } from "react-icons/fa6";
-import { GiCakeSlice } from "react-icons/gi";
+import { GiCakeSlice, GiMeat } from "react-icons/gi"; // 👈 agregado GiMeat
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -59,6 +59,7 @@ const categorias = [
   "Comida casera",
   "Pastelería",
   "Bebidas",
+  "Carnicerías", // 👈 nueva categoría
   "Artesanías",
   "Hogar y decoración",
   "Moda y accesorios",
@@ -81,6 +82,7 @@ const categoriaIconos: Record<string, React.ReactNode> = {
   "Comida casera": <FaUtensils size={20} className="text-red-500" />,
   "Pastelería": <GiCakeSlice size={20} className="text-pink-400" />,
   "Bebidas": <FaGlassMartiniAlt size={20} className="text-purple-500" />,
+  "Carnicerías": <GiMeat size={20} className="text-red-600" />, // 👈 ícono agregado
   "Artesanías": <FaPaintBrush size={20} className="text-yellow-500" />,
   "Hogar y decoración": <FaHome size={20} className="text-orange-500" />,
   "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
