@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { db } from "@/firebase/firebaseConfig";
-import { collectionGroup, getDocs, query, orderBy } from "firebase/firestore";
+import { collectionGroup, getDocs, query, orderBy, limit, startAfter, where, DocumentSnapshot } from "firebase/firestore";
 import {
   FaWhatsapp,
   FaInstagram,
@@ -27,14 +27,17 @@ import {
   FaHeartbeat,
   FaCamera,
   FaStore,
-  FaMapMarkerAlt, // Importado el ícono de mapa
+  FaMapMarkerAlt,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { FaScissors } from "react-icons/fa6";
 import { GiCakeSlice } from "react-icons/gi";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode } from "swiper/modules";
+import { FreeMode, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
+import "swiper/css/navigation";
 
 type Emprendimiento = {
   id: string;
@@ -47,7 +50,8 @@ type Emprendimiento = {
   tiktok?: string;
   web?: string;
   imageUrl?: string;
-  ubicacion?: string; // Nuevo campo de ubicacion
+  ubicacion?: string;
+  createdAt?: string;
 };
 
 const categorias = [
@@ -94,11 +98,16 @@ const categoriaIconos: Record<string, React.ReactNode> = {
   "Educación y cursos": <FaBookOpen size={20} className="text-blue-500" />,
 };
 
+const ITEMS_PER_PAGE = 12;
+
 export default function EmprendedoresFiltrados() {
   const [emprendimientos, setEmprendimientos] = useState<Emprendimiento[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todos");
   const [isMobile, setIsMobile] = useState(false);
+  const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -107,31 +116,60 @@ export default function EmprendedoresFiltrados() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const fetchEmprendimientos = async () => {
-      try {
-        const q = query(collectionGroup(db, "emprendimientos"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Emprendimiento));
-        setEmprendimientos(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEmprendimientos();
-  }, []);
+  const fetchEmprendimientos = async (loadMore = false) => {
+    setLoading(true);
+    try {
+      let baseQuery = query(
+        collectionGroup(db, "emprendimientos"),
+        orderBy("createdAt", "desc")
+      );
 
-  const emprendimientosFiltrados =
-    categoriaSeleccionada === "Todos"
-      ? emprendimientos
-      : emprendimientos.filter((e) => e.categoria === categoriaSeleccionada);
+      if (categoriaSeleccionada !== "Todos") {
+        baseQuery = query(baseQuery, where("categoria", "==", categoriaSeleccionada));
+      }
+
+      const paginatedQuery = loadMore && lastVisible
+        ? query(baseQuery, startAfter(lastVisible), limit(ITEMS_PER_PAGE))
+        : query(baseQuery, limit(ITEMS_PER_PAGE));
+
+      const snapshot = await getDocs(paginatedQuery);
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Emprendimiento[];
+
+      setEmprendimientos((prev) => (loadMore ? [...prev, ...data] : data));
+      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
+      setHasMore(snapshot.docs.length === ITEMS_PER_PAGE);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmprendimientos(false);
+  }, [categoriaSeleccionada]);
+
+  const handleCargarMas = () => {
+    fetchEmprendimientos(true);
+  };
+
+  const handleSelectCategoria = (nombre: string) => {
+    if (nombre !== categoriaSeleccionada) {
+      setCategoriaSeleccionada(nombre);
+      setEmprendimientos([]);
+      setLastVisible(null);
+      setHasMore(true);
+    }
+  };
 
   const renderCategoriaButton = (nombre: string) => (
     <button
       key={nombre}
-      onClick={() => setCategoriaSeleccionada(nombre)}
+      onClick={() => handleSelectCategoria(nombre)}
       className={`bg-gray-100 rounded-xl shadow-sm flex flex-col items-center justify-center text-center hover:shadow-md hover:scale-105 transition-transform duration-150 w-20 h-20 ${
         categoriaSeleccionada === nombre ? "bg-indigo-100" : ""
       }`}
@@ -141,9 +179,84 @@ export default function EmprendedoresFiltrados() {
     </button>
   );
 
-  if (loading) {
-    return <p className="text-center mt-10 text-gray-500 animate-pulse">Cargando emprendedores...</p>;
-  }
+  const renderEmprendimientos = (emprendimientosList: Emprendimiento[]) => (
+    emprendimientosList.length > 0 ? (
+      emprendimientosList.map((emp) => (
+        <div
+          key={emp.id}
+          className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 flex flex-col h-full"
+        >
+          <div className="relative h-48 w-full overflow-hidden rounded-t-3xl">
+            {emp.imageUrl ? (
+              <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
+            ) : (
+              <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+                Sin imagen
+              </div>
+            )}
+          </div>
+          <div className="p-5 flex flex-col flex-1">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
+            <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
+            {emp.createdAt && (
+              <p className="mt-1 text-gray-500 text-xs">
+                {new Date(emp.createdAt).toLocaleDateString("es-AR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            )}
+            <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
+            {emp.ubicacion && (
+                <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-base text-red-500" />
+                    {emp.ubicacion}
+                </p>
+            )}
+            <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
+              {emp.contacto && (
+                <a
+                  href={`https://wa.me/${emp.contacto.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-500 hover:text-green-600 transition"
+                >
+                  <FaWhatsapp />
+                </a>
+              )}
+              {emp.instagram && (
+                <a href={emp.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600 transition">
+                  <FaInstagram />
+                </a>
+              )}
+              {emp.facebook && (
+                <a href={emp.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition">
+                  <FaFacebookF />
+                </a>
+              )}
+              {emp.tiktok && (
+                <a href={emp.tiktok} target="_blank" rel="noopener noreferrer" className="text-black hover:text-gray-800 transition">
+                  <FaTiktok />
+                </a>
+              )}
+              {emp.web && (
+                <a href={emp.web} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:text-gray-900 transition">
+                  <FaGlobe />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      ))
+    ) : (
+      !isInitialLoad && (
+        <p className="text-center text-gray-500 col-span-full mt-4">
+          No hay emprendimientos en esta categoría.
+        </p>
+      )
+    )
+  );
 
   return (
     <section id="emprendedores" className="py-12 bg-gray-50">
@@ -173,77 +286,135 @@ export default function EmprendedoresFiltrados() {
         </Swiper>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
-        {emprendimientosFiltrados.length > 0 ? (
-          emprendimientosFiltrados.map((emp) => (
-            <div
-              key={emp.id}
-              className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 overflow-hidden flex flex-col"
-            >
-              <div className="relative h-48 w-full">
-                {emp.imageUrl ? (
-                  <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
-                ) : (
-                  <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
-                    Sin imagen
+      <div className="max-w-7xl mx-auto relative">
+        {categoriaSeleccionada === "Todos" ? (
+          <Swiper
+            modules={[FreeMode, Navigation]}
+            spaceBetween={20}
+            slidesPerView={1.2}
+            freeMode={true}
+            navigation={{
+              nextEl: ".swiper-button-next-custom",
+              prevEl: ".swiper-button-prev-custom",
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 30,
+              },
+              1024: {
+                slidesPerView: 3,
+                spaceBetween: 40,
+              },
+            }}
+            className="pb-4 px-4"
+          >
+            {emprendimientos.length > 0 ? (
+              emprendimientos.map((emp) => (
+                <SwiperSlide key={emp.id} className="h-full relative group z-0" style={{ overflow: 'visible' }}>
+                  <div className="bg-white rounded-3xl shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition transform duration-300 flex flex-col h-full relative z-0 group-hover:z-10">
+                    <div className="relative h-48 w-full overflow-hidden rounded-t-3xl">
+                      {emp.imageUrl ? (
+                        <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
+                      ) : (
+                        <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+                          Sin imagen
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
+                      <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
+                      {emp.createdAt && (
+                        <p className="mt-1 text-gray-500 text-xs">
+                          {new Date(emp.createdAt).toLocaleDateString("es-AR", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                      )}
+                      <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
+                      {emp.ubicacion && (
+                        <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
+                          <FaMapMarkerAlt className="text-base text-red-500" />
+                          {emp.ubicacion}
+                        </p>
+                      )}
+                      <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
+                        {emp.contacto && (
+                          <a
+                            href={`https://wa.me/${emp.contacto.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-green-500 hover:text-green-600 transition"
+                          >
+                            <FaWhatsapp />
+                          </a>
+                        )}
+                        {emp.instagram && (
+                          <a href={emp.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600 transition">
+                            <FaInstagram />
+                          </a>
+                        )}
+                        {emp.facebook && (
+                          <a href={emp.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition">
+                            <FaFacebookF />
+                          </a>
+                        )}
+                        {emp.tiktok && (
+                          <a href={emp.tiktok} target="_blank" rel="noopener noreferrer" className="text-black hover:text-gray-800 transition">
+                            <FaTiktok />
+                          </a>
+                        )}
+                        {emp.web && (
+                          <a href={emp.web} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:text-gray-900 transition">
+                            <FaGlobe />
+                          </a>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
-                <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
-                <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
-                {/* Nuevo código para mostrar la ubicación */}
-                {emp.ubicacion && (
-                    <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
-                        <FaMapMarkerAlt className="text-base text-red-500" />
-                        {emp.ubicacion}
-                    </p>
-                )}
-                {/* Fin del nuevo código */}
-
-                <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
-                  {emp.contacto && (
-                    <a
-                      href={`https://wa.me/${emp.contacto.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-500 hover:text-green-600 transition"
-                    >
-                      <FaWhatsapp />
-                    </a>
-                  )}
-                  {emp.instagram && (
-                    <a href={emp.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600 transition">
-                      <FaInstagram />
-                    </a>
-                  )}
-                  {emp.facebook && (
-                    <a href={emp.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition">
-                      <FaFacebookF />
-                    </a>
-                  )}
-                  {emp.tiktok && (
-                    <a href={emp.tiktok} target="_blank" rel="noopener noreferrer" className="text-black hover:text-gray-800 transition">
-                      <FaTiktok />
-                    </a>
-                  )}
-                  {emp.web && (
-                    <a href={emp.web} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:text-gray-900 transition">
-                      <FaGlobe />
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
+                </SwiperSlide>
+              ))
+            ) : (
+              !isInitialLoad && (
+                <SwiperSlide>
+                  <p className="text-center text-gray-500 col-span-full mt-4">
+                    No hay emprendimientos en esta categoría.
+                  </p>
+                </SwiperSlide>
+              )
+            )}
+          </Swiper>
         ) : (
-          <p className="text-center text-gray-500 col-span-full mt-4">
-            No hay emprendimientos en esta categoría.
-          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
+            {renderEmprendimientos(emprendimientos)}
+          </div>
+        )}
+        {categoriaSeleccionada === "Todos" && (
+          <>
+            <div className="swiper-button-prev-custom absolute top-1/2 -left-4 transform -translate-y-1/2 p-3 rounded-full bg-white shadow-md text-gray-700 hover:bg-gray-100 transition duration-200 z-10 cursor-pointer hidden md:flex items-center justify-center">
+              <FaChevronLeft size={20} />
+            </div>
+            <div className="swiper-button-next-custom absolute top-1/2 -right-4 transform -translate-y-1/2 p-3 rounded-full bg-white shadow-md text-gray-700 hover:bg-gray-100 transition duration-200 z-10 cursor-pointer hidden md:flex items-center justify-center">
+              <FaChevronRight size={20} />
+            </div>
+          </>
         )}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleCargarMas}
+            disabled={loading}
+            className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
+          >
+            {loading ? "Cargando..." : "Cargar más"}
+          </button>
+        </div>
+      )}
     </section>
   );
 }
