@@ -18,7 +18,7 @@ const Sobre = () => {
           Somos un equipo de Rivadavia comprometido con el crecimiento local. Este proyecto nace con el objetivo de dar visibilidad a emprendedores, artesanos y pequeños negocios de nuestra comunidad.
         </p>
         <p className="text-gray-700 text-lg leading-relaxed mb-4">
-          Tienduca es un espacio libre, gratuito y sin fines de lucro. Creemos que las ideas locales merecen ser descubiertas y apoyadas por todos los vecinos.
+          Tienduca es un espacio libre y colaborativo. Creemos que las ideas locales merecen ser descubiertas y apoyadas por todos los vecinos.
         </p>
         <p className="text-gray-700 italic text-lg leading-relaxed">
           Hecho con <span className="text-yellow-500">💛</span> por personas reales, para personas reales.
