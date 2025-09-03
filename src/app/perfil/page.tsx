@@ -139,8 +139,8 @@ export default function Perfil() {
         });
       }
 
-      handleCancelEdit(); // Limpia el formulario y el estado de edición
-      setRefresh(!refresh); // Fuerza la recarga de la lista
+      handleCancelEdit();
+      setRefresh(!refresh);
     } catch (err) {
       console.error(err);
       alert("Error al guardar el emprendimiento.");
@@ -195,18 +195,19 @@ export default function Perfil() {
     <div className="bg-gray-100 min-h-screen py-10">
       <div className="max-w-3xl mx-auto p-4 space-y-8 relative">
 
-        {/* Botón flotante para ir al Menú Principal */}
+        {/* Botón para volver a la página principal con nuevo diseño */}
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-5 right-5 bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white px-6 py-3 rounded-full shadow-lg z-50 transition-all duration-300 transform hover:scale-105"
+          onClick={() => router.push('/')}
+          className="absolute top-4 left-4 bg-white text-blue-900 border border-blue-200 px-4 py-2 rounded-full shadow-md hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 text-sm font-semibold"
         >
-          Menú Principal
+          &laquo; Volver
         </button>
+
+    
 
         {/* Sección Perfil */}
         <div className="bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-8 rounded-3xl shadow-xl text-center">
           <div className="flex justify-center items-center mb-4">
-            {/* Aquí se agrega el logo */}
             <h2 className="text-3xl font-bold tracking-wide">
               Hola, <span className="text-yellow-400">{user.displayName || "Usuario"}</span>! 👋
             </h2>
@@ -387,7 +388,7 @@ export default function Perfil() {
                   </div>
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Evita que se active la edición al hacer clic en este botón
+                      e.stopPropagation();
                       handleDelete(emp.id);
                     }}
                     className="mt-4 sm:mt-0 px-5 py-2 bg-red-500 text-white rounded-full text-sm font-semibold shadow-md hover:bg-red-600 transition-all duration-300 transform hover:scale-105"
