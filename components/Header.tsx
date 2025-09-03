@@ -70,7 +70,7 @@ export default function Header() {
             <>
               <Link
                 href="/login"
-                className="text-sm font-medium text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition"
+                className="bg-yellow-300 text-sm font-medium text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-yellow-400 transition"
               >
                 Iniciar sesión
               </Link>
@@ -186,7 +186,7 @@ export default function Header() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="border border-gray-300 text-center rounded-lg px-4 py-2 hover:bg-gray-100 transition"
+                  className="bg-yellow-300 border border-gray-300 text-center rounded-lg px-4 py-2 hover:bg-yellow-400 transition"
                 >
                   Iniciar sesión
                 </Link>
