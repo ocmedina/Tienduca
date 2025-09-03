@@ -15,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
-import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe, FaImage, FaTimesCircle } from "react-icons/fa";
+import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe, FaImage, FaTimesCircle, FaMapMarkerAlt } from "react-icons/fa";
 
 type Emprendimiento = {
   id: string;
@@ -28,6 +28,7 @@ type Emprendimiento = {
   tiktok?: string;
   web?: string;
   imageUrl?: string;
+  ubicacion?: string; // Nuevo campo de ubicacion
 };
 
 // Categorías actualizadas con las nuevas opciones
@@ -70,6 +71,7 @@ export default function Perfil() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [ubicacion, setUbicacion] = useState(""); // Nuevo estado para la ubicación
 
   const CLOUDINARY_CLOUD_NAME = "dkqqhbble";
   const CLOUDINARY_UPLOAD_PRESET = "ocmedina";
@@ -158,7 +160,7 @@ export default function Perfil() {
         return;
       }
     } else if (imageUrlPreview === null && editingEmp?.imageUrl) {
-        finalImageUrl = null;
+      finalImageUrl = null;
     }
 
     try {
@@ -173,6 +175,7 @@ export default function Perfil() {
           tiktok,
           web,
           imageUrl: finalImageUrl,
+          ubicacion, // Se agrega ubicacion
         });
       } else {
         await addDoc(collection(db, "users", user.uid, "emprendimientos"), {
@@ -185,6 +188,7 @@ export default function Perfil() {
           tiktok,
           web,
           imageUrl: finalImageUrl,
+          ubicacion, // Se agrega ubicacion
           createdAt: serverTimestamp(),
         });
       }
@@ -230,6 +234,7 @@ export default function Perfil() {
     setWeb(emp.web || "");
     setImageFile(null);
     setImageUrlPreview(emp.imageUrl || null);
+    setUbicacion(emp.ubicacion || ""); // Se actualiza el estado de ubicacion
   };
 
   const handleCancelEdit = () => {
@@ -244,6 +249,7 @@ export default function Perfil() {
     setWeb("");
     setImageFile(null);
     setImageUrlPreview(null);
+    setUbicacion(""); // Se limpia el estado de ubicacion
   };
 
   const handleDelete = async (id: string) => {
@@ -264,7 +270,6 @@ export default function Perfil() {
   return (
     <div className="bg-gray-100 min-h-screen py-10">
       <div className="max-w-3xl mx-auto p-4 space-y-8 relative">
-
         <button
           onClick={() => router.push('/')}
           className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-gray-800 bg-yellow-400 shadow-md hover:bg-yellow-500 transition-colors duration-200"
@@ -342,7 +347,13 @@ export default function Perfil() {
               className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-700 transition-all duration-200"
               required
             />
-
+            <input
+              type="text"
+              placeholder="Ubicación (opcional)"
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-700 transition-all duration-200"
+            />
             <label className="block text-gray-700 text-sm font-bold mb-2">Imagen del Emprendimiento (opcional)</label>
             <div className="flex items-center space-x-4">
                 <input
@@ -350,11 +361,11 @@ export default function Perfil() {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="block w-full text-sm text-gray-500
-                            file:mr-4 file:py-2 file:px-4
-                            file:rounded-full file:border-0
-                            file:text-sm file:font-semibold
-                            file:bg-blue-50 file:text-blue-700
-                            hover:file:bg-blue-100"
+                             file:mr-4 file:py-2 file:px-4
+                             file:rounded-full file:border-0
+                             file:text-sm file:font-semibold
+                             file:bg-blue-50 file:text-blue-700
+                             hover:file:bg-blue-100"
                 />
                 {(imageUrlPreview || (editingEmp && editingEmp.imageUrl)) && (
                     <div className="relative w-24 h-24">
@@ -451,6 +462,12 @@ export default function Perfil() {
                         />
                     )}
                     <p className="text-gray-600 mt-2 text-sm leading-relaxed">{emp.descripcion}</p>
+                    {emp.ubicacion && (
+                        <p className="text-gray-500 mt-2 text-sm flex items-center gap-2">
+                            <FaMapMarkerAlt className="text-base text-red-500" />
+                            {emp.ubicacion}
+                        </p>
+                    )}
                     <div className="flex gap-4 mt-4 text-gray-500 flex-wrap">
                       {emp.contacto && (
                         <a

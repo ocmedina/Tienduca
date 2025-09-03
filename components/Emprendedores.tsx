@@ -26,9 +26,10 @@ import {
   FaHome,
   FaHeartbeat,
   FaCamera,
-  FaStore, // Ícono para Drugstores
+  FaStore,
+  FaMapMarkerAlt, // Importado el ícono de mapa
 } from "react-icons/fa";
-import { FaScissors } from "react-icons/fa6"; // ¡CORREGIDO! Ahora importado de 'react-icons/fa6'
+import { FaScissors } from "react-icons/fa6";
 import { GiCakeSlice } from "react-icons/gi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
@@ -46,9 +47,9 @@ type Emprendimiento = {
   tiktok?: string;
   web?: string;
   imageUrl?: string;
+  ubicacion?: string; // Nuevo campo de ubicacion
 };
 
-// Se agregaron las nuevas categorías a la lista
 const categorias = [
   "Todos",
   "Comida casera",
@@ -59,8 +60,8 @@ const categorias = [
   "Moda y accesorios",
   "Lencería",
   "Productos para bebés",
-  "Peluquerías", // Nueva categoría
-  "Drugstores", // Nueva categoría
+  "Peluquerías",
+  "Drugstores",
   "Servicios técnicos",
   "Tecnología",
   "Productos naturales",
@@ -71,7 +72,6 @@ const categorias = [
   "Educación y cursos",
 ];
 
-// Se agregaron los nuevos íconos al mapeo
 const categoriaIconos: Record<string, React.ReactNode> = {
   "Todos": <FaList size={20} className="text-gray-500" />,
   "Comida casera": <FaUtensils size={20} className="text-red-500" />,
@@ -82,8 +82,8 @@ const categoriaIconos: Record<string, React.ReactNode> = {
   "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
   "Lencería": <FaTshirt size={20} className="text-pink-500" />,
   "Productos para bebés": <FaBaby size={20} className="text-pink-400" />,
-  "Peluquerías": <FaScissors size={20} className="text-fuchsia-600" />, // Ícono de tijeras de 'fa6'
-  "Drugstores": <FaStore size={20} className="text-sky-500" />, // Ícono de tienda
+  "Peluquerías": <FaScissors size={20} className="text-fuchsia-600" />,
+  "Drugstores": <FaStore size={20} className="text-sky-500" />,
   "Servicios técnicos": <FaHammer size={20} className="text-indigo-500" />,
   "Tecnología": <FaLaptopCode size={20} className="text-green-600" />,
   "Productos naturales": <FaLeaf size={20} className="text-emerald-500" />,
@@ -194,6 +194,14 @@ export default function EmprendedoresFiltrados() {
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
                 <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
                 <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
+                {/* Nuevo código para mostrar la ubicación */}
+                {emp.ubicacion && (
+                    <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
+                        <FaMapMarkerAlt className="text-base text-red-500" />
+                        {emp.ubicacion}
+                    </p>
+                )}
+                {/* Fin del nuevo código */}
 
                 <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
                   {emp.contacto && (
