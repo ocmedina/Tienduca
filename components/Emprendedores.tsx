@@ -21,7 +21,14 @@ import {
   FaShoppingBag,
   FaBicycle,
   FaBookOpen,
+  FaDog,
+  FaGlassMartiniAlt,
+  FaHome,
+  FaHeartbeat,
+  FaCamera,
+  FaStore, // Ícono para Drugstores
 } from "react-icons/fa";
+import { FaScissors } from "react-icons/fa6"; // ¡CORREGIDO! Ahora importado de 'react-icons/fa6'
 import { GiCakeSlice } from "react-icons/gi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
@@ -38,37 +45,52 @@ type Emprendimiento = {
   facebook?: string;
   tiktok?: string;
   web?: string;
-  imageUrl?: string; // CAMBIO IMPORTANTE: Ahora se usa 'imageUrl' en lugar de 'imagen'
+  imageUrl?: string;
 };
 
+// Se agregaron las nuevas categorías a la lista
 const categorias = [
   "Todos",
   "Comida casera",
   "Pastelería",
+  "Bebidas",
   "Artesanías",
+  "Hogar y decoración",
+  "Moda y accesorios",
   "Lencería",
+  "Productos para bebés",
+  "Peluquerías", // Nueva categoría
+  "Drugstores", // Nueva categoría
   "Servicios técnicos",
   "Tecnología",
   "Productos naturales",
-  "Productos para bebés",
-  "Moda y accesorios",
+  "Mascotas",
   "Deportes y outdoor",
+  "Salud y bienestar",
+  "Fotografía y arte",
   "Educación y cursos",
 ];
 
-// Mapeo de íconos para cada categoría
+// Se agregaron los nuevos íconos al mapeo
 const categoriaIconos: Record<string, React.ReactNode> = {
   "Todos": <FaList size={20} className="text-gray-500" />,
   "Comida casera": <FaUtensils size={20} className="text-red-500" />,
   "Pastelería": <GiCakeSlice size={20} className="text-pink-400" />,
+  "Bebidas": <FaGlassMartiniAlt size={20} className="text-purple-500" />,
   "Artesanías": <FaPaintBrush size={20} className="text-yellow-500" />,
+  "Hogar y decoración": <FaHome size={20} className="text-orange-500" />,
+  "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
   "Lencería": <FaTshirt size={20} className="text-pink-500" />,
+  "Productos para bebés": <FaBaby size={20} className="text-pink-400" />,
+  "Peluquerías": <FaScissors size={20} className="text-fuchsia-600" />, // Ícono de tijeras de 'fa6'
+  "Drugstores": <FaStore size={20} className="text-sky-500" />, // Ícono de tienda
   "Servicios técnicos": <FaHammer size={20} className="text-indigo-500" />,
   "Tecnología": <FaLaptopCode size={20} className="text-green-600" />,
   "Productos naturales": <FaLeaf size={20} className="text-emerald-500" />,
-  "Productos para bebés": <FaBaby size={20} className="text-pink-400" />,
-  "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
+  "Mascotas": <FaDog size={20} className="text-yellow-700" />,
   "Deportes y outdoor": <FaBicycle size={20} className="text-cyan-500" />,
+  "Salud y bienestar": <FaHeartbeat size={20} className="text-rose-500" />,
+  "Fotografía y arte": <FaCamera size={20} className="text-gray-700" />,
   "Educación y cursos": <FaBookOpen size={20} className="text-blue-500" />,
 };
 
@@ -78,7 +100,6 @@ export default function EmprendedoresFiltrados() {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todos");
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detectar tamaño de pantalla para el Swiper
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -86,7 +107,6 @@ export default function EmprendedoresFiltrados() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Traer emprendimientos de Firestore
   useEffect(() => {
     const fetchEmprendimientos = async () => {
       try {
@@ -127,7 +147,6 @@ export default function EmprendedoresFiltrados() {
 
   return (
     <section id="emprendedores" className="py-12 bg-gray-50">
-      {/* Carrusel de categorías */}
       <div className="text-center mb-10 px-4">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Nuestros Emprendedores</h2>
         <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
@@ -154,7 +173,6 @@ export default function EmprendedoresFiltrados() {
         </Swiper>
       </div>
 
-      {/* Grid de emprendimientos */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
         {emprendimientosFiltrados.length > 0 ? (
           emprendimientosFiltrados.map((emp) => (
@@ -163,7 +181,7 @@ export default function EmprendedoresFiltrados() {
               className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 overflow-hidden flex flex-col"
             >
               <div className="relative h-48 w-full">
-                {emp.imageUrl ? ( // CAMBIO IMPORTANTE: Se usa 'imageUrl' en la condición
+                {emp.imageUrl ? (
                   <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
                 ) : (
                   <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">

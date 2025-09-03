@@ -15,7 +15,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
-import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe, FaImage, FaTimesCircle } from "react-icons/fa"; // Se añadió FaImage y FaTimesCircle
+import { FaInstagram, FaFacebook, FaTiktok, FaWhatsapp, FaGlobe, FaImage, FaTimesCircle } from "react-icons/fa";
 
 type Emprendimiento = {
   id: string;
@@ -27,20 +27,28 @@ type Emprendimiento = {
   facebook?: string;
   tiktok?: string;
   web?: string;
-  imageUrl?: string; // Nuevo campo para la URL de la imagen
+  imageUrl?: string;
 };
 
+// Categorías actualizadas con las nuevas opciones
 const categorias = [
   "Comida casera",
   "Pastelería",
+  "Bebidas",
   "Artesanías",
+  "Hogar y decoración",
+  "Moda y accesorios",
   "Lencería",
+  "Productos para bebés",
+  "Peluquerías",
+  "Drugstores",
   "Servicios técnicos",
   "Tecnología",
   "Productos naturales",
-  "Productos para bebés",
-  "Moda y accesorios",
+  "Mascotas",
   "Deportes y outdoor",
+  "Salud y bienestar",
+  "Fotografía y arte",
   "Educación y cursos",
 ];
 
@@ -51,7 +59,6 @@ export default function Perfil() {
   const [refresh, setRefresh] = useState(false);
   const [editingEmp, setEditingEmp] = useState<Emprendimiento | null>(null);
 
-  // Estados formulario
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -60,15 +67,13 @@ export default function Perfil() {
   const [facebook, setFacebook] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [web, setWeb] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null); // Estado para el archivo de imagen seleccionado
-  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null); // Estado para la previsualización de la imagen
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
 
-  // Configuración de Cloudinary (¡Reemplaza con tus datos!)
-  const CLOUDINARY_CLOUD_NAME = "dkqqhbble"; // Reemplaza esto con tu Cloud Name
-  const CLOUDINARY_UPLOAD_PRESET = "ocmedina"; // Reemplaza esto con el nombre de tu upload preset (sin firmar)
+  const CLOUDINARY_CLOUD_NAME = "dkqqhbble";
+  const CLOUDINARY_UPLOAD_PRESET = "ocmedina";
 
-  // Función para formatear WhatsApp
   const formatWhatsApp = (numero: string) => {
     let clean = numero.replace(/\D/g, "");
     if (clean.startsWith("0")) clean = clean.slice(1);
@@ -76,14 +81,12 @@ export default function Perfil() {
     return clean;
   };
 
-  // Protege la ruta
   useEffect(() => {
     if (!loading && !user) {
       router.push("/login");
     }
   }, [user, loading, router]);
 
-  // Traer emprendimientos
   useEffect(() => {
     const fetchEmprendimientos = async () => {
       if (!user) return;
@@ -105,7 +108,6 @@ export default function Perfil() {
     fetchEmprendimientos();
   }, [user, refresh]);
 
-  // Función para subir la imagen a Cloudinary
   const uploadImageToCloudinary = async (file: File): Promise<string | null> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -132,7 +134,6 @@ export default function Perfil() {
     }
   };
 
-  // Subir nuevo emprendimiento o actualizar existente
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -145,10 +146,9 @@ export default function Perfil() {
     }
     setSubiendo(true);
 
-    let finalImageUrl = editingEmp?.imageUrl || null; // Mantener la imagen existente por defecto
+    let finalImageUrl = editingEmp?.imageUrl || null;
 
     if (imageFile) {
-      // Si hay un nuevo archivo de imagen, subirlo
       const uploadedUrl = await uploadImageToCloudinary(imageFile);
       if (uploadedUrl) {
         finalImageUrl = uploadedUrl;
@@ -158,13 +158,11 @@ export default function Perfil() {
         return;
       }
     } else if (imageUrlPreview === null && editingEmp?.imageUrl) {
-        // Si se eliminó la previsualización de una imagen existente
         finalImageUrl = null;
     }
 
     try {
       if (editingEmp) {
-        // Modo Edición
         await updateDoc(doc(db, "users", user.uid, "emprendimientos", editingEmp.id), {
           nombre,
           categoria,
@@ -177,7 +175,6 @@ export default function Perfil() {
           imageUrl: finalImageUrl,
         });
       } else {
-        // Modo Creación
         await addDoc(collection(db, "users", user.uid, "emprendimientos"), {
           nombre,
           categoria,
@@ -192,8 +189,8 @@ export default function Perfil() {
         });
       }
 
-      handleCancelEdit(); // Limpia el formulario y el estado de edición
-      setRefresh(!refresh); // Fuerza la recarga de la lista
+      handleCancelEdit();
+      setRefresh(!refresh);
     } catch (err) {
       console.error(err);
       alert("Error al guardar el emprendimiento.");
@@ -202,30 +199,25 @@ export default function Perfil() {
     }
   };
 
-  // Manejar el cambio de archivo de imagen
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      setImageUrlPreview(URL.createObjectURL(file)); // Crear una URL para previsualizar
+      setImageUrlPreview(URL.createObjectURL(file));
     } else {
       setImageFile(null);
       setImageUrlPreview(null);
     }
   };
 
-  // Eliminar la imagen previsualizada o la imagen existente en edición
   const handleRemoveImage = () => {
     setImageFile(null);
     setImageUrlPreview(null);
-    // Si estamos editando y eliminamos la imagen, también la quitamos del editingEmp
     if (editingEmp) {
       setEditingEmp({ ...editingEmp, imageUrl: undefined });
     }
   };
 
-
-  // Llenar el formulario para editar
   const handleEdit = (emp: Emprendimiento) => {
     setEditingEmp(emp);
     setNombre(emp.nombre);
@@ -236,11 +228,10 @@ export default function Perfil() {
     setFacebook(emp.facebook || "");
     setTiktok(emp.tiktok || "");
     setWeb(emp.web || "");
-    setImageFile(null); // Resetear el archivo seleccionado al editar
-    setImageUrlPreview(emp.imageUrl || null); // Mostrar la imagen existente si hay
+    setImageFile(null);
+    setImageUrlPreview(emp.imageUrl || null);
   };
 
-  // Cancelar la edición
   const handleCancelEdit = () => {
     setEditingEmp(null);
     setNombre("");
@@ -255,7 +246,6 @@ export default function Perfil() {
     setImageUrlPreview(null);
   };
 
-  // Eliminar emprendimiento
   const handleDelete = async (id: string) => {
     if (!confirm("¿Seguro querés eliminar este emprendimiento?")) return;
     try {
@@ -275,32 +265,27 @@ export default function Perfil() {
     <div className="bg-gray-100 min-h-screen py-10">
       <div className="max-w-3xl mx-auto p-4 space-y-8 relative">
 
-        {/* Botón para volver a la página principal */}
-{/* Botón para volver a la página principal */}
-<button
-  onClick={() => router.push('/')}
-  className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-gray-800 bg-yellow-400 shadow-md hover:bg-yellow-500 transition-colors duration-200"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="h-4 w-4"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15 19l-7-7 7-7"
-    />
-  </svg>
-  Volver
-</button>
+        <button
+          onClick={() => router.push('/')}
+          className="absolute top-4 left-4 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-gray-800 bg-yellow-400 shadow-md hover:bg-yellow-500 transition-colors duration-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Volver
+        </button>
 
-      
-
-        {/* Sección Perfil */}
         <div className="bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-8 rounded-3xl shadow-xl text-center">
           <div className="flex justify-center items-center mb-4">
             <h2 className="text-3xl font-bold tracking-wide">
@@ -310,7 +295,6 @@ export default function Perfil() {
           <p className="text-gray-300 font-light text-lg">Email: {user.email}</p>
         </div>
 
-        {/* Formulario de Emprendimiento (Crear/Editar) */}
         <div className="bg-white p-8 rounded-3xl shadow-xl space-y-6">
           <h3 className="text-2xl font-bold text-center text-gray-800">
             {editingEmp ? "Edita tu Emprendimiento" : "Crea tu Emprendimiento"}
@@ -359,7 +343,6 @@ export default function Perfil() {
               required
             />
 
-            {/* Campo de subida de imagen */}
             <label className="block text-gray-700 text-sm font-bold mb-2">Imagen del Emprendimiento (opcional)</label>
             <div className="flex items-center space-x-4">
                 <input
@@ -367,11 +350,11 @@ export default function Perfil() {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100"
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-blue-50 file:text-blue-700
+                            hover:file:bg-blue-100"
                 />
                 {(imageUrlPreview || (editingEmp && editingEmp.imageUrl)) && (
                     <div className="relative w-24 h-24">
@@ -445,7 +428,6 @@ export default function Perfil() {
           </form>
         </div>
 
-        {/* Lista de emprendimientos */}
         <div className="space-y-6">
           <h3 className="text-2xl font-bold text-gray-800">Mis Emprendimientos ✨</h3>
           {emprendimientos.length === 0 ? (
@@ -461,7 +443,7 @@ export default function Perfil() {
                   <div className="flex-1">
                     <h4 className="font-bold text-xl text-blue-800">{emp.nombre}</h4>
                     <p className="text-yellow-600 font-medium text-sm mt-1">{emp.categoria}</p>
-                    {emp.imageUrl && ( // Mostrar imagen si existe
+                    {emp.imageUrl && (
                         <img
                             src={emp.imageUrl}
                             alt={`Imagen de ${emp.nombre}`}
@@ -537,7 +519,6 @@ export default function Perfil() {
           )}
         </div>
 
-        {/* Sección Quiénes somos */}
         <div className="bg-gradient-to-br from-blue-700 to-blue-900 text-white p-8 rounded-3xl shadow-xl text-center">
           <h3 className="text-2xl font-bold mb-2 tracking-wide">¿Quiénes somos?</h3>
           <p className="text-gray-300 font-light leading-relaxed">

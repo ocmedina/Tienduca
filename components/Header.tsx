@@ -179,7 +179,6 @@ export default function Header() {
           <div className="flex flex-col px-6 py-4 space-y-4 text-gray-700 font-medium">
             <a href="#" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Inicio</a>
             <a href="#emprendedores" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Emprendedores</a>
-            <a href="#categorias" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Categorías</a>
             <a href="#sumate" onClick={() => setMenuOpen(false)} className="hover:text-blue-600 transition">Sumate</a>
 
             {!user && (
