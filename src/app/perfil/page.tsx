@@ -44,6 +44,7 @@ const categorias = [
   "Productos para bebés",
   "Peluquerías",
   "Drugstores",
+  "Locales comerciales",
   "Servicios técnicos",
   "Tecnología",
   "Productos naturales",
