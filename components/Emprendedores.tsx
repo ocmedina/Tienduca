@@ -32,7 +32,7 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import { FaScissors } from "react-icons/fa6";
-import { GiCakeSlice, GiMeat } from "react-icons/gi"; // 👈 agregado GiMeat
+import { GiCakeSlice, GiMeat } from "react-icons/gi";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation } from "swiper/modules";
 import "swiper/css";
@@ -51,7 +51,7 @@ type Emprendimiento = {
   web?: string;
   imageUrl?: string;
   ubicacion?: string;
-  createdAt?: string;
+  createdAt?: { toDate: () => Date };
 };
 
 const categorias = [
@@ -59,7 +59,7 @@ const categorias = [
   "Comida casera",
   "Pastelería",
   "Bebidas",
-  "Carnicerías", // 👈 nueva categoría
+  "Carnicerías",
   "Artesanías",
   "Hogar y decoración",
   "Moda y accesorios",
@@ -82,7 +82,7 @@ const categoriaIconos: Record<string, React.ReactNode> = {
   "Comida casera": <FaUtensils size={20} className="text-red-500" />,
   "Pastelería": <GiCakeSlice size={20} className="text-pink-400" />,
   "Bebidas": <FaGlassMartiniAlt size={20} className="text-purple-500" />,
-  "Carnicerías": <GiMeat size={20} className="text-red-600" />, // 👈 ícono agregado
+  "Carnicerías": <GiMeat size={20} className="text-red-600" />,
   "Artesanías": <FaPaintBrush size={20} className="text-yellow-500" />,
   "Hogar y decoración": <FaHome size={20} className="text-orange-500" />,
   "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
@@ -200,15 +200,17 @@ export default function EmprendedoresFiltrados() {
           <div className="p-5 flex flex-col flex-1">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
             <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
+            {/* INICIO DE CÓDIGO CORREGIDO */}
             {emp.createdAt && (
               <p className="mt-1 text-gray-500 text-xs">
-                {new Date(emp.createdAt).toLocaleDateString("es-AR", {
+                {emp.createdAt.toDate().toLocaleDateString("es-AR", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
                 })}
               </p>
             )}
+            {/* FIN DE CÓDIGO CORREGIDO */}
             <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
             {emp.ubicacion && (
                 <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
@@ -289,6 +291,18 @@ export default function EmprendedoresFiltrados() {
       </div>
 
       <div className="max-w-7xl mx-auto relative">
+        {/* INICIO DEL INDICADOR DE CARGA */}
+        {loading && emprendimientos.length === 0 && (
+          <div className="flex justify-center items-center py-10">
+            <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.002 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="ml-4 text-gray-600 font-medium">Cargando emprendimientos...</span>
+          </div>
+        )}
+        {/* FIN DEL INDICADOR DE CARGA */}
+
         {categoriaSeleccionada === "Todos" ? (
           <Swiper
             modules={[FreeMode, Navigation]}
@@ -327,15 +341,17 @@ export default function EmprendedoresFiltrados() {
                     <div className="p-5 flex flex-col flex-1">
                       <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
                       <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
+                      {/* INICIO DE CÓDIGO CORREGIDO */}
                       {emp.createdAt && (
                         <p className="mt-1 text-gray-500 text-xs">
-                          {new Date(emp.createdAt).toLocaleDateString("es-AR", {
+                          {emp.createdAt.toDate().toLocaleDateString("es-AR", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
                           })}
                         </p>
                       )}
+                      {/* FIN DE CÓDIGO CORREGIDO */}
                       <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
                       {emp.ubicacion && (
                         <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
@@ -406,7 +422,7 @@ export default function EmprendedoresFiltrados() {
         )}
       </div>
 
-      {hasMore && (
+      {hasMore && !loading && (
         <div className="flex justify-center mt-8">
           <button
             onClick={handleCargarMas}
