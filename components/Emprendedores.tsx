@@ -28,16 +28,13 @@ import {
   FaCamera,
   FaStore,
   FaMapMarkerAlt,
-  FaChevronLeft,
-  FaChevronRight,
 } from "react-icons/fa";
 import { FaScissors } from "react-icons/fa6";
 import { GiCakeSlice, GiMeat } from "react-icons/gi";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode, Navigation } from "swiper/modules";
+import { FreeMode } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/free-mode";
-import "swiper/css/navigation";
 
 type Emprendimiento = {
   id: string;
@@ -190,19 +187,18 @@ export default function EmprendedoresFiltrados() {
           key={emp.id}
           className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 flex flex-col h-full"
         >
-          <div className="relative h-48 w-full overflow-hidden rounded-t-3xl">
+          <div className="relative h-40 w-full overflow-hidden rounded-t-3xl">
             {emp.imageUrl ? (
-              <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
+              <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-contain" />
             ) : (
-              <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
+              <div className="h-40 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
                 Sin imagen
               </div>
             )}
           </div>
-          <div className="p-5 flex flex-col flex-1">
+          <div className="p-4 flex flex-col flex-1">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
             <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
-            {/* INICIO DE CÓDIGO CORREGIDO */}
             {emp.createdAt && (
               <p className="mt-1 text-gray-500 text-xs">
                 {emp.createdAt.toDate().toLocaleDateString("es-AR", {
@@ -212,8 +208,7 @@ export default function EmprendedoresFiltrados() {
                 })}
               </p>
             )}
-            {/* FIN DE CÓDIGO CORREGIDO */}
-            <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
+            <p className="mt-3 text-gray-600 text-xs sm:text-sm flex-1">{emp.descripcion}</p>
             {emp.ubicacion && (
                 <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
                     <FaMapMarkerAlt className="text-base text-red-500" />
@@ -293,7 +288,6 @@ export default function EmprendedoresFiltrados() {
       </div>
 
       <div className="max-w-7xl mx-auto relative">
-        {/* INICIO DEL INDICADOR DE CARGA */}
         {loading && emprendimientos.length === 0 && (
           <div className="flex justify-center items-center py-10">
             <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -303,125 +297,10 @@ export default function EmprendedoresFiltrados() {
             <span className="ml-4 text-gray-600 font-medium">Cargando emprendimientos...</span>
           </div>
         )}
-        {/* FIN DEL INDICADOR DE CARGA */}
 
-        {categoriaSeleccionada === "Todos" ? (
-          <Swiper
-            modules={[FreeMode, Navigation]}
-            spaceBetween={20}
-            slidesPerView={1.2}
-            freeMode={true}
-            navigation={{
-              nextEl: ".swiper-button-next-custom",
-              prevEl: ".swiper-button-prev-custom",
-            }}
-            breakpoints={{
-              640: {
-                slidesPerView: 2,
-                spaceBetween: 30,
-              },
-              1024: {
-                slidesPerView: 3,
-                spaceBetween: 40,
-              },
-            }}
-            className="pb-4 px-4"
-          >
-            {emprendimientos.length > 0 ? (
-              emprendimientos.map((emp) => (
-                <SwiperSlide key={emp.id} className="h-full relative group z-0" style={{ overflow: 'visible' }}>
-                  <div className="bg-white rounded-3xl shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition transform duration-300 flex flex-col h-full relative z-0 group-hover:z-10">
-                    <div className="relative h-48 w-full overflow-hidden rounded-t-3xl">
-                      {emp.imageUrl ? (
-                        <Image src={emp.imageUrl} alt={emp.nombre} fill className="object-cover" />
-                      ) : (
-                        <div className="h-48 w-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm">
-                          Sin imagen
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5 flex flex-col flex-1">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
-                      <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
-                      {/* INICIO DE CÓDIGO CORREGIDO */}
-                      {emp.createdAt && (
-                        <p className="mt-1 text-gray-500 text-xs">
-                          {emp.createdAt.toDate().toLocaleDateString("es-AR", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
-                      )}
-                      {/* FIN DE CÓDIGO CORREGIDO */}
-                      <p className="mt-3 text-gray-600 text-sm sm:text-base flex-1">{emp.descripcion}</p>
-                      {emp.ubicacion && (
-                        <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
-                          <FaMapMarkerAlt className="text-base text-red-500" />
-                          {emp.ubicacion}
-                        </p>
-                      )}
-                      <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
-                        {emp.contacto && (
-                          <a
-                            href={`https://wa.me/${emp.contacto.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-green-500 hover:text-green-600 transition"
-                          >
-                            <FaWhatsapp />
-                          </a>
-                        )}
-                        {emp.instagram && (
-                          <a href={emp.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-600 transition">
-                            <FaInstagram />
-                          </a>
-                        )}
-                        {emp.facebook && (
-                          <a href={emp.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 transition">
-                            <FaFacebookF />
-                          </a>
-                        )}
-                        {emp.tiktok && (
-                          <a href={emp.tiktok} target="_blank" rel="noopener noreferrer" className="text-black hover:text-gray-800 transition">
-                            <FaTiktok />
-                          </a>
-                        )}
-                        {emp.web && (
-                          <a href={emp.web} target="_blank" rel="noopener noreferrer" className="text-gray-800 hover:text-gray-900 transition">
-                            <FaGlobe />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              ))
-            ) : (
-              !isInitialLoad && (
-                <SwiperSlide>
-                  <p className="text-center text-gray-500 col-span-full mt-4">
-                    No hay emprendimientos en esta categoría.
-                  </p>
-                </SwiperSlide>
-              )
-            )}
-          </Swiper>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
             {renderEmprendimientos(emprendimientos)}
-          </div>
-        )}
-        {categoriaSeleccionada === "Todos" && (
-          <>
-            <div className="swiper-button-prev-custom absolute top-1/2 -left-4 transform -translate-y-1/2 p-3 rounded-full bg-white shadow-md text-gray-700 hover:bg-gray-100 transition duration-200 z-10 cursor-pointer hidden md:flex items-center justify-center">
-              <FaChevronLeft size={20} />
-            </div>
-            <div className="swiper-button-next-custom absolute top-1/2 -right-4 transform -translate-y-1/2 p-3 rounded-full bg-white shadow-md text-gray-700 hover:bg-gray-100 transition duration-200 z-10 cursor-pointer hidden md:flex items-center justify-center">
-              <FaChevronRight size={20} />
-            </div>
-          </>
-        )}
+        </div>
       </div>
 
       {hasMore && !loading && (
