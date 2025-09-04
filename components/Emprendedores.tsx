@@ -116,7 +116,6 @@ const normalize = (s: string) =>
   s
     .toLowerCase()
     .normalize("NFD")
-    // @ts-ignore - usamos clase Unicode
     .replace(/\p{Diacritic}/gu, "")
     .trim();
 
