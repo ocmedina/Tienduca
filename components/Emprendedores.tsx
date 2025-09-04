@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { db } from "@/firebase/firebaseConfig";
-import { collectionGroup, getDocs, query, orderBy, limit, startAfter, where, DocumentSnapshot } from "firebase/firestore";
+import {
+  collectionGroup,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  startAfter,
+  where,
+  DocumentSnapshot,
+} from "firebase/firestore";
 import {
   FaWhatsapp,
   FaInstagram,
@@ -49,6 +58,7 @@ type Emprendimiento = {
   imageUrl?: string;
   ubicacion?: string;
   createdAt?: { toDate: () => Date };
+  nombre_lower?: string;
 };
 
 const categorias = [
@@ -76,23 +86,23 @@ const categorias = [
 ];
 
 const categoriaIconos: Record<string, React.ReactNode> = {
-  "Todos": <FaList size={20} className="text-gray-500" />,
+  Todos: <FaList size={20} className="text-gray-500" />,
   "Comida casera": <FaUtensils size={20} className="text-red-500" />,
-  "Pastelería": <GiCakeSlice size={20} className="text-pink-400" />,
-  "Bebidas": <FaGlassMartiniAlt size={20} className="text-purple-500" />,
-  "Carnicerías": <GiMeat size={20} className="text-red-600" />,
-  "Artesanías": <FaPaintBrush size={20} className="text-yellow-500" />,
+  Pastelería: <GiCakeSlice size={20} className="text-pink-400" />,
+  Bebidas: <FaGlassMartiniAlt size={20} className="text-purple-500" />,
+  Carnicerías: <GiMeat size={20} className="text-red-600" />,
+  Artesanías: <FaPaintBrush size={20} className="text-yellow-500" />,
   "Hogar y decoración": <FaHome size={20} className="text-orange-500" />,
   "Moda y accesorios": <FaShoppingBag size={20} className="text-purple-600" />,
-  "Lencería": <FaTshirt size={20} className="text-pink-500" />,
+  Lencería: <FaTshirt size={20} className="text-pink-500" />,
   "Productos para bebés": <FaBaby size={20} className="text-pink-400" />,
-  "Peluquerías": <FaScissors size={20} className="text-fuchsia-600" />,
-  "Drugstores": <FaStore size={20} className="text-sky-500" />,
+  Peluquerías: <FaScissors size={20} className="text-fuchsia-600" />,
+  Drugstores: <FaStore size={20} className="text-sky-500" />,
   "Locales comerciales": <FaStore size={20} className="text-sky-500" />,
   "Servicios técnicos": <FaHammer size={20} className="text-indigo-500" />,
-  "Tecnología": <FaLaptopCode size={20} className="text-green-600" />,
+  Tecnología: <FaLaptopCode size={20} className="text-green-600" />,
   "Productos naturales": <FaLeaf size={20} className="text-emerald-500" />,
-  "Mascotas": <FaDog size={20} className="text-yellow-700" />,
+  Mascotas: <FaDog size={20} className="text-yellow-700" />,
   "Deportes y outdoor": <FaBicycle size={20} className="text-cyan-500" />,
   "Salud y bienestar": <FaHeartbeat size={20} className="text-rose-500" />,
   "Fotografía y arte": <FaCamera size={20} className="text-gray-700" />,
@@ -100,6 +110,15 @@ const categoriaIconos: Record<string, React.ReactNode> = {
 };
 
 const ITEMS_PER_PAGE = 12;
+
+// 🔤 normalizador para búsqueda sin tildes
+const normalize = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    // @ts-ignore - usamos clase Unicode
+    .replace(/\p{Diacritic}/gu, "")
+    .trim();
 
 export default function EmprendedoresFiltrados() {
   const [emprendimientos, setEmprendimientos] = useState<Emprendimiento[]>([]);
@@ -109,6 +128,8 @@ export default function EmprendedoresFiltrados() {
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [fallbackMode, setFallbackMode] = useState(false); // si activamos filtrado local
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -117,31 +138,75 @@ export default function EmprendedoresFiltrados() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const fetchEmprendimientos = async (loadMore = false) => {
+  const fetchEmprendimientos = async (
+    loadMore = false,
+    newSearchTerm = searchTerm,
+    newCategory = categoriaSeleccionada
+  ) => {
     setLoading(true);
     try {
-      let baseQuery = query(
-        collectionGroup(db, "emprendimientos"),
-        orderBy("createdAt", "desc")
-      );
+      setFallbackMode(false);
 
-      if (categoriaSeleccionada !== "Todos") {
-        baseQuery = query(baseQuery, where("categoria", "==", categoriaSeleccionada));
+      const base = collectionGroup(db, "emprendimientos");
+      let q;
+
+      const hasSearch = newSearchTerm.trim() !== "";
+      const termLower = newSearchTerm.toLowerCase();
+
+      if (hasSearch) {
+        // 🔎 Búsqueda por nombre_lower (respetando tildes)
+        q = query(
+          base,
+          where("nombre_lower", ">=", termLower),
+          where("nombre_lower", "<=", termLower + "\uf8ff"),
+          orderBy("nombre_lower")
+        );
+      } else {
+        // 🗓️ listado por fecha
+        q = query(base, orderBy("createdAt", "desc"));
       }
 
-      const paginatedQuery = loadMore && lastVisible
-        ? query(baseQuery, startAfter(lastVisible), limit(ITEMS_PER_PAGE))
-        : query(baseQuery, limit(ITEMS_PER_PAGE));
+      if (newCategory !== "Todos") {
+        // igualdad por categoría (necesita índice junto con nombre_lower cuando hay búsqueda)
+        q = query(q, where("categoria", "==", newCategory));
+      }
 
-      const snapshot = await getDocs(paginatedQuery);
+      const paginated =
+        loadMore && lastVisible
+          ? query(q, startAfter(lastVisible), limit(ITEMS_PER_PAGE))
+          : query(q, limit(ITEMS_PER_PAGE));
+
+      const snapshot = await getDocs(paginated);
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Emprendimiento[];
 
-      setEmprendimientos((prev) => (loadMore ? [...prev, ...data] : data));
-      setLastVisible(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === ITEMS_PER_PAGE);
+      // ✅ Resultados directos de Firestore
+      if (data.length > 0 || !hasSearch) {
+        setEmprendimientos((prev) => (loadMore ? [...prev, ...data] : data));
+        setLastVisible(snapshot.docs[snapshot.docs.length - 1] ?? null);
+        setHasMore(snapshot.docs.length === ITEMS_PER_PAGE);
+      } else {
+        // 🛟 Fallback acento-insensible (trae un batch y filtra local)
+        let q2 = query(base, orderBy("createdAt", "desc"));
+        if (newCategory !== "Todos") q2 = query(q2, where("categoria", "==", newCategory));
+
+        const snap2 = await getDocs(query(q2, limit(100)));
+        const all = snap2.docs.map((d) => ({ id: d.id, ...d.data() })) as Emprendimiento[];
+
+        const termNorm = normalize(newSearchTerm);
+        const filtered = all.filter((e) => {
+          const n = normalize(e.nombre || "");
+          const d = normalize(e.descripcion || "");
+          return n.includes(termNorm) || d.includes(termNorm);
+        });
+
+        setEmprendimientos(filtered.slice(0, ITEMS_PER_PAGE));
+        setHasMore(filtered.length > ITEMS_PER_PAGE);
+        setLastVisible(null); // desactiva paginación en fallback
+        setFallbackMode(true);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -151,19 +216,31 @@ export default function EmprendedoresFiltrados() {
   };
 
   useEffect(() => {
+    setEmprendimientos([]);
+    setLastVisible(null);
+    setHasMore(true);
     fetchEmprendimientos(false);
   }, [categoriaSeleccionada]);
 
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setEmprendimientos([]);
+      setLastVisible(null);
+      setHasMore(true);
+      fetchEmprendimientos(false, searchTerm, categoriaSeleccionada);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchTerm, categoriaSeleccionada]);
+
   const handleCargarMas = () => {
+    if (fallbackMode) return; // no hay paginación en fallback
     fetchEmprendimientos(true);
   };
 
   const handleSelectCategoria = (nombre: string) => {
     if (nombre !== categoriaSeleccionada) {
       setCategoriaSeleccionada(nombre);
-      setEmprendimientos([]);
-      setLastVisible(null);
-      setHasMore(true);
+      setSearchTerm("");
     }
   };
 
@@ -176,13 +253,15 @@ export default function EmprendedoresFiltrados() {
       }`}
     >
       {categoriaIconos[nombre]}
-      <span className="mt-1 text-xs text-gray-700 font-medium text-center px-1 leading-tight">{nombre}</span>
+      <span className="mt-1 text-xs text-gray-700 font-medium text-center px-1 leading-tight">
+        {nombre}
+      </span>
     </button>
   );
 
-  const renderEmprendimientos = (emprendimientosList: Emprendimiento[]) => (
-    emprendimientosList.length > 0 ? (
-      emprendimientosList.map((emp) => (
+  const renderEmprendimientos = (list: Emprendimiento[]) =>
+    list.length > 0 ? (
+      list.map((emp) => (
         <div
           key={emp.id}
           className="bg-white rounded-3xl shadow-lg hover:shadow-2xl hover:scale-105 transition transform duration-300 flex flex-col h-full"
@@ -198,7 +277,9 @@ export default function EmprendedoresFiltrados() {
           </div>
           <div className="p-4 flex flex-col flex-1">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{emp.nombre}</h3>
-            <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">{emp.categoria}</span>
+            <span className="text-indigo-600 font-medium mt-1 text-sm sm:text-base">
+              {emp.categoria}
+            </span>
             {emp.createdAt && (
               <p className="mt-1 text-gray-500 text-xs">
                 {emp.createdAt.toDate().toLocaleDateString("es-AR", {
@@ -210,10 +291,10 @@ export default function EmprendedoresFiltrados() {
             )}
             <p className="mt-3 text-gray-600 text-xs sm:text-sm flex-1">{emp.descripcion}</p>
             {emp.ubicacion && (
-                <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
-                    <FaMapMarkerAlt className="text-base text-red-500" />
-                    {emp.ubicacion}
-                </p>
+              <p className="mt-2 text-gray-500 text-sm flex items-center gap-2">
+                <FaMapMarkerAlt className="text-base text-red-500" />
+                {emp.ubicacion}
+              </p>
             )}
             <div className="mt-4 flex items-center space-x-3 text-xl sm:text-2xl">
               {emp.contacto && (
@@ -253,11 +334,10 @@ export default function EmprendedoresFiltrados() {
     ) : (
       !isInitialLoad && (
         <p className="text-center text-gray-500 col-span-full mt-4">
-          No hay emprendimientos en esta categoría.
+          No hay emprendimientos que coincidan con la búsqueda o la categoría.
         </p>
       )
-    )
-  );
+    );
 
   return (
     <section id="emprendedores" className="py-12 bg-gray-50">
@@ -266,6 +346,21 @@ export default function EmprendedoresFiltrados() {
         <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
           Descubrí personas reales, ideas auténticas y los productos o servicios que hacen crecer nuestra comunidad.
         </p>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 mb-8">
+        <input
+          type="text"
+          placeholder="Buscar emprendimientos, productos o servicios..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {fallbackMode && (
+          <p className="mt-2 text-xs text-gray-500">
+            Mostrando resultados aproximados (búsqueda sin tildes). La paginación está desactivada.
+          </p>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto mb-10" style={{ paddingLeft: 0, paddingRight: 0 }}>
@@ -299,11 +394,11 @@ export default function EmprendedoresFiltrados() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 px-4">
-            {renderEmprendimientos(emprendimientos)}
+          {renderEmprendimientos(emprendimientos)}
         </div>
       </div>
 
-      {hasMore && !loading && (
+      {hasMore && !loading && !fallbackMode && (
         <div className="flex justify-center mt-8">
           <button
             onClick={handleCargarMas}
